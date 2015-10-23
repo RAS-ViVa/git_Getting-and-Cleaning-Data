@@ -1,0 +1,134 @@
+---
+title: "CodeBook.md"
+author: "VIvanov"
+date: "October 22, 2015"
+output: html_document
+---
+
+This is Getting and Cleaning Data Course Project of the Coursera's courses in the Data Science Specialization. The purpose of this project is to demonstrate my ability to collect, work with, and clean a data set. The goal is to prepare tidy data that can be used for later analysis. 
+
+Companies like Fitbit, Nike, and Jawbone Up are racing to develop the most advanced algorithms to attract new users. The data linked to from the course website represent data collected from the accelerometers from the Samsung Galaxy S smartphone. A full description is available at the site where the data was obtained: 
+http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones 
+
+Here are the data for the project: 
+https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip 
+
+It should create one R script.R that does the following. 
+1. Merges the training and the test sets to create one data set.
+2. Extracts only the measurements on the mean and standard deviation for each measurement. 
+3. Uses descriptive activity names to name the activities in the data set
+4. Appropriately labels the data set with descriptive variable names. 
+5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+Description of the DATA
+Human Activity Recognition Using Smartphones Dataset
+Version 1.0
+==================================================================
+Jorge L. Reyes-Ortiz, Davide Anguita, Alessandro Ghio, Luca Oneto.
+Smartlab - Non Linear Complex Systems Laboratory
+DITEN - Universitа degli Studi di Genova.
+Via Opera Pia 11A, I-16145, Genoa, Italy.
+activityrecognition@smartlab.ws
+www.smartlab.ws
+==================================================================
+
+The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data. 
+
+The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. From each window, a vector of features was obtained by calculating variables from the time and frequency domain. See 'features_info.txt' for more details. 
+
+For each record it is provided:
+======================================
+
+- Triaxial acceleration from the accelerometer (total acceleration) and the estimated body acceleration.
+- Triaxial Angular velocity from the gyroscope. 
+- A 561-feature vector with time and frequency domain variables. 
+- Its activity label. 
+- An identifier of the subject who carried out the experiment.
+
+The dataset includes the following files:
+=========================================
+- 'README.txt'
+- 'features_info.txt': Shows information about the variables used on the feature vector.
+- 'features.txt': List of all features.
+- 'activity_labels.txt': Links the class labels with their activity name.
+- 'train/X_train.txt': Training set.
+- 'train/y_train.txt': Training labels.
+- 'test/X_test.txt': Test set.
+- 'test/y_test.txt': Test labels.
+
+The following files are available for the train and test data. Their descriptions are equivalent. 
+- 'train/subject_train.txt': Each row identifies the subject who performed the activity for each window sample. Its range is from 1 to 30. 
+- 'train/Inertial Signals/total_acc_x_train.txt': The acceleration signal from the smartphone accelerometer X axis in standard gravity units 'g'. Every row shows a 128 element vector. The same description applies for the 'total_acc_x_train.txt' and 'total_acc_z_train.txt' files for the Y and Z axis. 
+- 'train/Inertial Signals/body_acc_x_train.txt': The body acceleration signal obtained by subtracting the gravity from the total acceleration. 
+- 'train/Inertial Signals/body_gyro_x_train.txt': The angular velocity vector measured by the gyroscope for each window sample. The units are radians/second.
+
+I use the related files:
+1. Values of Varible Activity consist of data from “Y_train.txt” and “Y_test.txt”
+2. Values of Varible Subject consist of data from “subject_train.txt” and subject_test.txt"
+3. Values of Varibles Features consist of data from “X_train.txt” and “X_test.txt”
+4. Names of Varibles Features come from “features.txt”
+5. Levels of Varible Activity come from “activity_labels.txt”
+So I will use Activity, Subject and Features as part of descriptive variable names for data in data frame.
+
+Required packages
+plyr
+dplyr
+redhape
+stats
+date.table
+
+## 1.Create the directory for local store date sets and fit it
+if(!file.exists("./myproject")) {dir.create("./myproject")}
+fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileURL, destfile = "./myproject/Dataset.zip", method = "curl")
+unzip("./myproject/Dataset.zip", exdir= "./myproject")
+##create constante with path to primarary data sets
+datasetsPath <- file.path("./myproject" , "UCI HAR Dataset")
+
+##read files and create table with test data and rename required columns
+featuresNames_Set <- read.table(file.path(datasetsPath, "features.txt" ),header = FALSE, stringsAsFactors = FALSE)
+subject_testSet <- read.table(file.path(datasetsPath, "test" , "subject_test.txt" ),header = FALSE)
+setnames(subject_testSet, "id_subject")
+label_testSet <- read.table(file.path(datasetsPath, "test" , "y_test.txt" ),header = FALSE)
+setnames(label_testSet, "id_label")
+raw_testSet <- read.table(file.path(datasetsPath, "test" , "X_test.txt" ),header = FALSE)
+names(raw_testSet)<- featuresNames_Set$V2
+testSet_1 <- cbind(subject_testSet, label_testSet)
+testSet <- cbind(testSet_1, raw_testSet)
+
+##read files and create table with train train
+subject_trainSet <- read.table(file.path(datasetsPath, "train" , "subject_train.txt" ),header = FALSE)
+label_trainSet <- read.table(file.path(datasetsPath, "train" , "y_train.txt" ),header = FALSE)
+raw_trainSet <- read.table(file.path(datasetsPath, "train" , "X_train.txt" ),header = FALSE)
+trainSet_1 <- cbind(subject_trainSet, label_trainSet)
+trainSet <- cbind(trainSet_1, raw_trainSet)
+
+##merge test and train sets
+finishSet <- rbind(testSet, trainSet)
+
+##2. Extracts only the measurements on the mean and standard deviation for each measurement
+setMeanStd <- finishSet[ ,grep("id|mean|std", names(finishSet))]
+
+## 4. Appropriately labels the data set with descriptive variable names.
+activity_testSet <- read.table(file.path(datasetsPath, "activity_labels.txt" ),header = FALSE)
+setnames(activity_testSet, c("id_label", "activity"))
+activitySetMeanStd <- merge(setMeanStd, activity_testSet,  by="id_label", all.x=TRUE)
+
+##4. Appropriately labels the data set with descriptive variable names.
+names(activitySetMeanStd) <- gsub("std()", "Standard deviation", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("mean()", "Mean value", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("^t", "time", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("^f", "frequency", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("Acc", "Accelerometer", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("Gyro", "Gyroscope", names(activitySetMeanStd))
+names(activitySetMeanStd) <- gsub("Mag", "Magnitude", names(activitySetMeanStd))
+
+##5. From the data set in step 4, creates a second, independent tidy data set with the average
+##of each variable for each activity and each subject.
+
+newTidySet_1 <- aggregate(. ~activity + id_subject, activitySetMeanStd, mean)
+newTidySet_0 <- arrange(newTidySet_1, id_label, id_subject)
+newTidySet <- select (newTidySet_0, -(id_label))
+
+write.table(newTidySet, file = "./newTidySet.txt")
+
