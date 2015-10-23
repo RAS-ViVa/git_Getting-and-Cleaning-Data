@@ -129,16 +129,13 @@ names(activitySetMeanStd) <- gsub("Gyro", "Gyroscope", names(activitySetMeanStd)
 
 names(activitySetMeanStd) <- gsub("Mag", "Magnitude", names(activitySetMeanStd))
 
-
 ##5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
-
 ##make and order tidy data set with the average of each variable for each activity and each subject 
 newTidySet_1 <- aggregate(. ~activity + id_subject, activitySetMeanStd, mean)
 
 newTidySet_0 <- arrange(newTidySet_1, id_label, id_subject)
 
 newTidySet <- select (newTidySet_0, -(id_label))
-
 
 creates a second, independent tidy data set "newTidySet.txt" into your work directory 
 write.table(newTidySet, file = "./newTidySet.txt")
